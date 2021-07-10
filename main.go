@@ -7,8 +7,6 @@ import (
 
 func main() {
 	fmt.Println("mini")
-	for _, seed := range lib.DNSSeeds {
-		lib.IPsForHost(seed)
-	}
+	lib.GatherValidIPs()
 	lib.Connect("")
 }

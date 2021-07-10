@@ -38,13 +38,24 @@ var DNSSeeds = []string{
 	"bitclout-seed-19.io",
 }
 
-func IPsForHost(host string) {
+func IPsForHost(host string) []net.IP {
+	items := []net.IP{}
 	ipAddrs, err := net.LookupIP(host)
 	if err != nil {
 		fmt.Println(err)
-		return
+		return items
 	}
 	for _, ip := range ipAddrs {
 		fmt.Println(ip)
+		items = append(items, ip)
 	}
+	return items
+}
+
+func GatherValidIPs() {
+	items := []net.IP{}
+	for _, seed := range DNSSeeds {
+		items = append(items, IPsForHost(seed)...)
+	}
+	fmt.Println(len(items))
 }
