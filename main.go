@@ -7,6 +7,8 @@ import (
 
 func main() {
 	fmt.Println("mini")
-	lib.GatherValidIPs()
-	lib.Connect("")
+	ips := lib.GatherValidIPs()
+	for _, ip := range ips {
+		lib.Connect(ip)
+	}
 }

@@ -52,10 +52,10 @@ func IPsForHost(host string) []net.IP {
 	return items
 }
 
-func GatherValidIPs() {
+func GatherValidIPs() []net.IP {
 	items := []net.IP{}
 	for _, seed := range DNSSeeds {
 		items = append(items, IPsForHost(seed)...)
 	}
-	fmt.Println(len(items))
+	return items
 }

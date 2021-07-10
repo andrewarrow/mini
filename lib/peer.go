@@ -1,7 +1,10 @@
 package lib
 
-import "fmt"
+import (
+	"fmt"
+	"net"
+)
 
-func Connect(ip string) {
-	fmt.Println("connecting to peer...")
+func Connect(ip net.IP) {
+	fmt.Println("connecting to peer", ip)
 }
