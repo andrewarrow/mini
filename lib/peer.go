@@ -3,6 +3,7 @@ package lib
 import (
 	"crypto/rand"
 	"fmt"
+	"io"
 	"math"
 	"math/big"
 	"net"
@@ -24,8 +25,21 @@ func Connect(ip net.IP) {
 		return
 	}
 	SendVersion(conn)
+	ReadVersion(conn)
 }
 
+func ReadVersion(conn net.Conn) {
+	inNetworkType, _ := ReadUvarint(conn)
+	fmt.Println(inNetworkType)
+	inMsgType, _ := ReadUvarint(conn)
+	fmt.Println(inMsgType)
+	checksum := make([]byte, 8)
+	_, err := io.ReadFull(conn, checksum)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+}
 func SendVersion(conn net.Conn) {
 	version := MsgBitCloutVersion{}
 	version.Version = 1
