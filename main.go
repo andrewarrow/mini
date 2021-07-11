@@ -13,6 +13,6 @@ func main() {
 	//	lib.Connect(ip)
 	//}
 	//104.238.183.241
-	//35.232.92.5
-	lib.Connect(net.ParseIP("64.98.145.30"))
+	//lib.Connect(net.ParseIP("64.98.145.30"))
+	lib.Connect(net.ParseIP("35.232.92.5"))
 }

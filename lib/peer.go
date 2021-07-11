@@ -7,6 +7,8 @@ import (
 	"math/big"
 	"net"
 	"time"
+
+	merkletree "github.com/laser/go-merkle-tree"
 )
 
 func Connect(ip net.IP) {
@@ -35,6 +37,47 @@ func SendVersion(conn net.Conn) {
 	version.MinFeeRateNanosPerKB = 0
 
 	fmt.Println(conn)
+
+	hdr := []byte{}
+	hdr = append(hdr, UintToBuf(uint64(1))...)
+	hdr = append(hdr, UintToBuf(uint64(1))...)
+	payload := ToBytes(version)
+	hash := Sha256DoubleHash(payload)
+	hdr = append(hdr, hash[:8]...)
+	hdr = append(hdr, UintToBuf(uint64(len(payload)))...)
+	_, err := conn.Write(hdr)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	_, err = conn.Write(payload)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+}
+
+func ToBytes(msg MsgBitCloutVersion) []byte {
+	retBytes := []byte{}
+	retBytes = append(retBytes, UintToBuf(msg.Version)...)
+	retBytes = append(retBytes, UintToBuf(uint64(msg.Services))...)
+	retBytes = append(retBytes, IntToBuf(msg.TstampSecs)...)
+	retBytes = append(retBytes, UintToBuf(msg.Nonce)...)
+	retBytes = append(retBytes, UintToBuf(uint64(len(msg.UserAgent)))...)
+	retBytes = append(retBytes, msg.UserAgent...)
+	retBytes = append(retBytes, UintToBuf(uint64(msg.StartBlockHeight))...)
+	retBytes = append(retBytes, UintToBuf(uint64(msg.MinFeeRateNanosPerKB))...)
+	retBytes = append(retBytes, UintToBuf(uint64(0))...)
+	return retBytes
+}
+
+type BlockHash [32]byte
+
+func Sha256DoubleHash(input []byte) *BlockHash {
+	hashBytes := merkletree.Sha256DoubleHash(input)
+	ret := &BlockHash{}
+	copy(ret[:], hashBytes[:])
+	return ret
 }
 
 func RandInt64(max int64) int64 {
