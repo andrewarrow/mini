@@ -11,8 +11,10 @@ use case:
 
 # building
 
+```
 go mod tidy
 go build
+```
 
 # running
 

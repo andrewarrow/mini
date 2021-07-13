@@ -189,6 +189,7 @@ func _readTransaction(rr io.Reader) {
 		io.ReadFull(rr, metaBuf)
 		fmt.Println("txnMetaType", txnMetaType, metaLen)
 		meta := SubmitPostMetadataFromBytes(metaBuf)
+		fmt.Println("Timestamp", meta.TimestampNanos/1000000000)
 		fmt.Println("body", string(meta.Body))
 	}
 }
