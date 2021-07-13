@@ -70,6 +70,8 @@ func ReadMessage() interface{} {
 		payload := t.ToBytes()
 		fmt.Println("t.HashList", len(t.HashList))
 		SendPayloadWithType(12, payload)
+	} else if inMsgType == 13 {
+		MsgBitCloutTransactionBundleFromBytes(payload)
 	}
 	return m
 }
