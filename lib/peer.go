@@ -12,7 +12,9 @@ import (
 	merkletree "github.com/laser/go-merkle-tree"
 )
 
-var conn net.Conn
+type MiniPeer struct {
+	conn net.Conn
+}
 
 func Connect(ip net.IP) {
 	fmt.Println("connecting to peer", ip)
@@ -22,35 +24,36 @@ func Connect(ip net.IP) {
 	}
 	fmt.Println(netAddr)
 	var err error
-	conn, err = net.DialTimeout(netAddr.Network(), netAddr.String(), 30*time.Second)
+	mp := MiniPeer{}
+	mp.conn, err = net.DialTimeout(netAddr.Network(), netAddr.String(), 30*time.Second)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	nonce1 := SendVersion()
+	nonce1 := mp.SendVersion()
 	fmt.Println("nonce1", nonce1)
-	m := ReadMessage()
+	m := mp.ReadMessage()
 	cv := m.(*MsgBitCloutVersion)
-	SendNonce(cv.Nonce)
-	m = ReadMessage()
+	mp.SendNonce(cv.Nonce)
+	m = mp.ReadMessage()
 	fmt.Println("nonce2", m)
-	SendMempool()
+	mp.SendMempool()
 
 	for {
 		time.Sleep(time.Second * 1)
-		ReadMessage()
+		mp.ReadMessage()
 	}
 }
 
-func ReadMessage() interface{} {
-	ReadUvarint(conn)
-	inMsgType, _ := ReadUvarint(conn)
+func (mp *MiniPeer) ReadMessage() interface{} {
+	ReadUvarint(mp.conn)
+	inMsgType, _ := ReadUvarint(mp.conn)
 	//fmt.Println(inNetworkType, inMsgType)
 	checksum := make([]byte, 8)
-	io.ReadFull(conn, checksum)
-	payloadLength, _ := ReadUvarint(conn)
+	io.ReadFull(mp.conn, checksum)
+	payloadLength, _ := ReadUvarint(mp.conn)
 	payload := make([]byte, payloadLength)
-	io.ReadFull(conn, payload)
+	io.ReadFull(mp.conn, payload)
 
 	var m interface{}
 	if inMsgType == 1 {
@@ -68,14 +71,14 @@ func ReadMessage() interface{} {
 		}
 		payload := t.ToBytes()
 		//fmt.Println("t.HashList", len(t.HashList))
-		SendPayloadWithType(12, payload)
+		mp.SendPayloadWithType(12, payload)
 	} else if inMsgType == 13 {
 		MsgBitCloutTransactionBundleFromBytes(payload)
 	}
 	return m
 }
 
-func SendVersion() uint64 {
+func (mp *MiniPeer) SendVersion() uint64 {
 	version := MsgBitCloutVersion{}
 	version.Version = 1
 	version.Services = 1
@@ -85,33 +88,33 @@ func SendVersion() uint64 {
 	version.StartBlockHeight = uint32(0)
 	version.MinFeeRateNanosPerKB = 0
 	payload := version.ToBytes()
-	SendPayloadWithType(1, payload)
+	mp.SendPayloadWithType(1, payload)
 	return version.Nonce
 }
-func SendNonce(n uint64) {
+func (mp *MiniPeer) SendNonce(n uint64) {
 	m := MsgBitCloutVerack{}
 	m.Nonce = n
 	payload := m.ToBytes()
-	SendPayloadWithType(2, payload)
+	mp.SendPayloadWithType(2, payload)
 }
-func SendMempool() {
+func (mp *MiniPeer) SendMempool() {
 	payload := []byte{}
-	SendPayloadWithType(14, payload)
+	mp.SendPayloadWithType(14, payload)
 }
 
-func SendPayloadWithType(mType int, payload []byte) {
+func (mp *MiniPeer) SendPayloadWithType(mType int, payload []byte) {
 	hdr := []byte{}
 	hdr = append(hdr, UintToBuf(uint64(1))...)
 	hdr = append(hdr, UintToBuf(uint64(mType))...)
 	hash := Sha256DoubleHash(payload)
 	hdr = append(hdr, hash[:8]...)
 	hdr = append(hdr, UintToBuf(uint64(len(payload)))...)
-	_, err := conn.Write(hdr)
+	_, err := mp.conn.Write(hdr)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	_, err = conn.Write(payload)
+	_, err = mp.conn.Write(payload)
 	if err != nil {
 		fmt.Println(err)
 		return
