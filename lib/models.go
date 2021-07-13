@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/btcsuite/btcd/btcec"
 )
@@ -189,7 +190,8 @@ func _readTransaction(rr io.Reader) {
 		io.ReadFull(rr, metaBuf)
 		fmt.Println("txnMetaType", txnMetaType, metaLen)
 		meta := SubmitPostMetadataFromBytes(metaBuf)
-		fmt.Println("Timestamp", meta.TimestampNanos/1000000000)
+		ts := int64(meta.TimestampNanos / 1000000000)
+		fmt.Println("Ago", time.Now().Unix()-ts)
 		fmt.Println("body", string(meta.Body))
 	}
 }
