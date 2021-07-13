@@ -59,3 +59,9 @@ func MsgBitCloutVersionFromBytes(data []byte) *MsgBitCloutVersion {
 type MsgBitCloutVerack struct {
 	Nonce uint64
 }
+
+func (msg *MsgBitCloutVerack) ToBytes() []byte {
+	retBytes := []byte{}
+	retBytes = append(retBytes, UintToBuf(msg.Nonce)...)
+	return retBytes
+}

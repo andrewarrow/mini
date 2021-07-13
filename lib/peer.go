@@ -12,6 +12,8 @@ import (
 	merkletree "github.com/laser/go-merkle-tree"
 )
 
+var conn net.Conn
+
 func Connect(ip net.IP) {
 	fmt.Println("connecting to peer", ip)
 	netAddr := net.TCPAddr{
@@ -19,13 +21,15 @@ func Connect(ip net.IP) {
 		Port: 17000,
 	}
 	fmt.Println(netAddr)
-	conn, err := net.DialTimeout(netAddr.Network(), netAddr.String(), 30*time.Second)
+	var err error
+	conn, err = net.DialTimeout(netAddr.Network(), netAddr.String(), 30*time.Second)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	SendVersion(conn)
-	ReadVersion(conn)
+	SendVersion()
+	nonce := ReadVersion()
+	SendNonce(nonce)
 
 	/*
 		for {
@@ -38,7 +42,7 @@ func Connect(ip net.IP) {
 		}*/
 }
 
-func ReadVersion(conn net.Conn) {
+func ReadVersion() uint64 {
 	inNetworkType, _ := ReadUvarint(conn)
 	fmt.Println(inNetworkType)
 	inMsgType, _ := ReadUvarint(conn)
@@ -50,9 +54,10 @@ func ReadVersion(conn net.Conn) {
 	io.ReadFull(conn, payload)
 	m := MsgBitCloutVersionFromBytes(payload)
 	fmt.Println(m)
+	return m.Nonce
 }
 
-func SendVersion(conn net.Conn) {
+func SendVersion() {
 	version := MsgBitCloutVersion{}
 	version.Version = 1
 	version.Services = 1
@@ -61,13 +66,20 @@ func SendVersion(conn net.Conn) {
 	version.TstampSecs = time.Now().Unix()
 	version.StartBlockHeight = uint32(0)
 	version.MinFeeRateNanosPerKB = 0
+	payload := version.ToBytes()
+	SendPayloadWithType(1, payload)
+}
+func SendNonce(n uint64) {
+	m := MsgBitCloutVerack{}
+	m.Nonce = n
+	payload := m.ToBytes()
+	SendPayloadWithType(2, payload)
+}
 
-	fmt.Println(conn)
-
+func SendPayloadWithType(mType int, payload []byte) {
 	hdr := []byte{}
 	hdr = append(hdr, UintToBuf(uint64(1))...)
-	hdr = append(hdr, UintToBuf(uint64(1))...)
-	payload := version.ToBytes()
+	hdr = append(hdr, UintToBuf(uint64(mType))...)
 	hash := Sha256DoubleHash(payload)
 	hdr = append(hdr, hash[:8]...)
 	hdr = append(hdr, UintToBuf(uint64(len(payload)))...)
