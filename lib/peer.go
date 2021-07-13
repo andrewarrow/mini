@@ -26,6 +26,16 @@ func Connect(ip net.IP) {
 	}
 	SendVersion(conn)
 	ReadVersion(conn)
+
+	/*
+		for {
+			time.Sleep(time.Second * 1)
+			fmt.Println("Reading...")
+			inNetworkType, _ := ReadUvarint(conn)
+			fmt.Println(inNetworkType)
+			inMsgType, _ := ReadUvarint(conn)
+			fmt.Println(inMsgType)
+		}*/
 }
 
 func ReadVersion(conn net.Conn) {
@@ -38,8 +48,10 @@ func ReadVersion(conn net.Conn) {
 	payloadLength, _ := ReadUvarint(conn)
 	payload := make([]byte, payloadLength)
 	io.ReadFull(conn, payload)
-	fmt.Println(len(payload))
+	m := MsgBitCloutVersionFromBytes(payload)
+	fmt.Println(m)
 }
+
 func SendVersion(conn net.Conn) {
 	version := MsgBitCloutVersion{}
 	version.Version = 1
@@ -55,7 +67,7 @@ func SendVersion(conn net.Conn) {
 	hdr := []byte{}
 	hdr = append(hdr, UintToBuf(uint64(1))...)
 	hdr = append(hdr, UintToBuf(uint64(1))...)
-	payload := ToBytes(version)
+	payload := version.ToBytes()
 	hash := Sha256DoubleHash(payload)
 	hdr = append(hdr, hash[:8]...)
 	hdr = append(hdr, UintToBuf(uint64(len(payload)))...)
@@ -69,20 +81,6 @@ func SendVersion(conn net.Conn) {
 		fmt.Println(err)
 		return
 	}
-}
-
-func ToBytes(msg MsgBitCloutVersion) []byte {
-	retBytes := []byte{}
-	retBytes = append(retBytes, UintToBuf(msg.Version)...)
-	retBytes = append(retBytes, UintToBuf(uint64(msg.Services))...)
-	retBytes = append(retBytes, IntToBuf(msg.TstampSecs)...)
-	retBytes = append(retBytes, UintToBuf(msg.Nonce)...)
-	retBytes = append(retBytes, UintToBuf(uint64(len(msg.UserAgent)))...)
-	retBytes = append(retBytes, msg.UserAgent...)
-	retBytes = append(retBytes, UintToBuf(uint64(msg.StartBlockHeight))...)
-	retBytes = append(retBytes, UintToBuf(uint64(msg.MinFeeRateNanosPerKB))...)
-	retBytes = append(retBytes, UintToBuf(uint64(0))...)
-	return retBytes
 }
 
 type BlockHash [32]byte
