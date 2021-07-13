@@ -2,7 +2,10 @@ package lib
 
 import (
 	"bytes"
+	"fmt"
 	"io"
+
+	"github.com/btcsuite/btcd/btcec"
 )
 
 type BlockHash [32]byte
@@ -130,4 +133,69 @@ func (msg *MsgBitCloutGetTransactions) ToBytes() []byte {
 	}
 
 	return data
+}
+
+type BitCloutOutput struct {
+	PublicKey   []byte
+	AmountNanos uint64
+}
+
+func NewBitCloutInput() *BitCloutInput {
+	return &BitCloutInput{
+		TxID: BlockHash{},
+	}
+}
+
+type UtxoKey struct {
+	TxID  BlockHash
+	Index uint32
+}
+
+type BitCloutInput UtxoKey
+
+type MsgBitCloutTxn struct {
+	TxInputs    []*BitCloutInput
+	TxOutputs   []*BitCloutOutput
+	TxnMeta     string //BitCloutTxnMetadata
+	PublicKey   []byte
+	ExtraData   map[string][]byte
+	Signature   string
+	TxnTypeJSON uint64
+}
+
+type MsgBitCloutTransactionBundle struct {
+	Transactions []*MsgBitCloutTxn
+}
+
+func _readTransaction(rr io.Reader) {
+	//m := MsgBitCloutTxn{}
+	numInputs, _ := ReadUvarint(rr)
+	for ii := uint64(0); ii < numInputs; ii++ {
+		currentInput := NewBitCloutInput()
+		io.ReadFull(rr, currentInput.TxID[:])
+		ReadUvarint(rr)
+	}
+	numOutputs, _ := ReadUvarint(rr)
+	for ii := uint64(0); ii < numOutputs; ii++ {
+		currentOutput := &BitCloutOutput{}
+		currentOutput.PublicKey = make([]byte, btcec.PubKeyBytesLenCompressed)
+		io.ReadFull(rr, currentOutput.PublicKey)
+		ReadUvarint(rr)
+	}
+	txnMetaType, _ := ReadUvarint(rr)
+	fmt.Println("txnMetaType", txnMetaType)
+}
+
+func MsgBitCloutTransactionBundleFromBytes(data []byte) *MsgBitCloutTransactionBundle {
+	rr := bytes.NewReader(data)
+	m := MsgBitCloutTransactionBundle{}
+
+	numTransactions, _ := ReadUvarint(rr)
+
+	for ii := uint64(0); ii < numTransactions; ii++ {
+		_readTransaction(rr)
+		//m.Transactions = append(m.Transactions, retTransaction)
+	}
+
+	return &m
 }
