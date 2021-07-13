@@ -184,7 +184,12 @@ func _readTransaction(rr io.Reader) {
 	}
 	txnMetaType, _ := ReadUvarint(rr)
 	if txnMetaType == 5 { // TxnTypeSubmitPost
-		fmt.Println("txnMetaType", txnMetaType)
+		metaLen, _ := ReadUvarint(rr)
+		metaBuf := make([]byte, metaLen)
+		io.ReadFull(rr, metaBuf)
+		fmt.Println("txnMetaType", txnMetaType, metaLen)
+		meta := SubmitPostMetadataFromBytes(metaBuf)
+		fmt.Println("body", string(meta.Body))
 	}
 }
 
@@ -198,6 +203,38 @@ func MsgBitCloutTransactionBundleFromBytes(data []byte) *MsgBitCloutTransactionB
 		_readTransaction(rr)
 		//m.Transactions = append(m.Transactions, retTransaction)
 	}
+
+	return &m
+}
+
+type SubmitPostMetadata struct {
+	PostHashToModify         []byte
+	ParentStakeID            []byte
+	Body                     []byte
+	CreatorBasisPoints       uint64
+	StakeMultipleBasisPoints uint64
+	TimestampNanos           uint64
+	IsHidden                 bool
+}
+
+func ReadVarString(rr io.Reader) []byte {
+	StringLen, _ := ReadUvarint(rr)
+	ret := make([]byte, StringLen)
+	io.ReadFull(rr, ret)
+	return ret
+}
+
+func SubmitPostMetadataFromBytes(data []byte) *SubmitPostMetadata {
+	m := SubmitPostMetadata{}
+	rr := bytes.NewReader(data)
+
+	m.PostHashToModify = ReadVarString(rr)
+	m.ParentStakeID = ReadVarString(rr)
+	m.Body = ReadVarString(rr)
+	m.CreatorBasisPoints, _ = ReadUvarint(rr)
+	m.StakeMultipleBasisPoints, _ = ReadUvarint(rr)
+	m.TimestampNanos, _ = ReadUvarint(rr)
+	//m.IsHidden = _readBoolByte(rr)
 
 	return &m
 }
