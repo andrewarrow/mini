@@ -34,11 +34,11 @@ func ReadVersion(conn net.Conn) {
 	inMsgType, _ := ReadUvarint(conn)
 	fmt.Println(inMsgType)
 	checksum := make([]byte, 8)
-	_, err := io.ReadFull(conn, checksum)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	io.ReadFull(conn, checksum)
+	payloadLength, _ := ReadUvarint(conn)
+	payload := make([]byte, payloadLength)
+	io.ReadFull(conn, payload)
+	fmt.Println(len(payload))
 }
 func SendVersion(conn net.Conn) {
 	version := MsgBitCloutVersion{}
