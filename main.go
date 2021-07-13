@@ -9,8 +9,8 @@ import (
 func main() {
 	fmt.Println("mini")
 	ips := lib.GatherValidIPs()
-	for _, ip := range ips {
-		go lib.Connect(ip)
+	for id, ip := range ips {
+		go lib.Connect(id, ip)
 	}
 	//104.238.183.241
 	//lib.Connect(net.ParseIP("64.98.145.30"))

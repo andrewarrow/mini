@@ -13,10 +13,11 @@ import (
 )
 
 type MiniPeer struct {
+	id   int
 	conn net.Conn
 }
 
-func Connect(ip net.IP) {
+func Connect(id int, ip net.IP) {
 	fmt.Println("connecting to peer", ip)
 	netAddr := net.TCPAddr{
 		IP:   ip,
@@ -25,6 +26,7 @@ func Connect(ip net.IP) {
 	fmt.Println(netAddr)
 	var err error
 	mp := MiniPeer{}
+	mp.id = id
 	mp.conn, err = net.DialTimeout(netAddr.Network(), netAddr.String(), 30*time.Second)
 	if err != nil {
 		fmt.Println(err)
@@ -73,7 +75,7 @@ func (mp *MiniPeer) ReadMessage() interface{} {
 		//fmt.Println("t.HashList", len(t.HashList))
 		mp.SendPayloadWithType(12, payload)
 	} else if inMsgType == 13 {
-		MsgBitCloutTransactionBundleFromBytes(payload)
+		MsgBitCloutTransactionBundleFromBytes(mp.id, payload)
 	}
 	return m
 }

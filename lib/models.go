@@ -168,7 +168,7 @@ type MsgBitCloutTransactionBundle struct {
 	Transactions []*MsgBitCloutTxn
 }
 
-func _readTransaction(rr io.Reader) {
+func _readTransaction(id int, rr io.Reader) {
 	//m := MsgBitCloutTxn{}
 	numInputs, _ := ReadUvarint(rr)
 	for ii := uint64(0); ii < numInputs; ii++ {
@@ -191,19 +191,19 @@ func _readTransaction(rr io.Reader) {
 		fmt.Println("txnMetaType", txnMetaType, metaLen)
 		meta := SubmitPostMetadataFromBytes(metaBuf)
 		ts := int64(meta.TimestampNanos / 1000000000)
-		fmt.Println("Ago", time.Now().Unix()-ts)
-		fmt.Println("body", string(meta.Body))
+		fmt.Println(id, "Ago", time.Now().Unix()-ts)
+		fmt.Println(id, "body", string(meta.Body))
 	}
 }
 
-func MsgBitCloutTransactionBundleFromBytes(data []byte) *MsgBitCloutTransactionBundle {
+func MsgBitCloutTransactionBundleFromBytes(id int, data []byte) *MsgBitCloutTransactionBundle {
 	rr := bytes.NewReader(data)
 	m := MsgBitCloutTransactionBundle{}
 
 	numTransactions, _ := ReadUvarint(rr)
 
 	for ii := uint64(0); ii < numTransactions; ii++ {
-		_readTransaction(rr)
+		_readTransaction(id, rr)
 		//m.Transactions = append(m.Transactions, retTransaction)
 	}
 
