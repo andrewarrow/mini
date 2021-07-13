@@ -34,6 +34,7 @@ func Connect(ip net.IP) {
 	SendNonce(cv.Nonce)
 	m = ReadMessage()
 	fmt.Println("nonce2", m)
+	SendMempool()
 
 	for {
 		time.Sleep(time.Second * 1)
@@ -57,8 +58,12 @@ func ReadMessage() interface{} {
 		m = MsgBitCloutVersionFromBytes(payload)
 	} else if inMsgType == 2 {
 		m = MsgBitCloutVerackFromBytes(payload)
+	} else if inMsgType == 10 {
+		inv := MsgBitCloutInvFromBytes(payload)
+		for _, item := range inv.InvList {
+			fmt.Println(item.Type)
+		}
 	}
-	fmt.Println(m)
 	return m
 }
 
@@ -81,6 +86,10 @@ func SendNonce(n uint64) {
 	payload := m.ToBytes()
 	SendPayloadWithType(2, payload)
 }
+func SendMempool() {
+	payload := []byte{}
+	SendPayloadWithType(14, payload)
+}
 
 func SendPayloadWithType(mType int, payload []byte) {
 	hdr := []byte{}
@@ -100,8 +109,6 @@ func SendPayloadWithType(mType int, payload []byte) {
 		return
 	}
 }
-
-type BlockHash [32]byte
 
 func Sha256DoubleHash(input []byte) *BlockHash {
 	hashBytes := merkletree.Sha256DoubleHash(input)

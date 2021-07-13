@@ -5,6 +5,18 @@ import (
 	"io"
 )
 
+type BlockHash [32]byte
+
+type InvVect struct {
+	Type uint32 // 0 tx
+	Hash BlockHash
+}
+
+type MsgBitCloutInv struct {
+	InvList        []*InvVect
+	IsSyncResponse bool
+}
+
 type MsgBitCloutVersion struct {
 	Version              uint64
 	Services             uint64
@@ -72,5 +84,35 @@ func MsgBitCloutVerackFromBytes(data []byte) *MsgBitCloutVerack {
 
 	nonce, _ := ReadUvarint(rr)
 	m.Nonce = nonce
+	return &m
+}
+
+func _readInvList(rr io.Reader) ([]*InvVect, error) {
+	invList := []*InvVect{}
+	numInvVects, _ := ReadUvarint(rr)
+	for ii := uint64(0); ii < numInvVects; ii++ {
+		typeUint, _ := ReadUvarint(rr)
+
+		invHash := BlockHash{}
+		io.ReadFull(rr, invHash[:])
+
+		invVect := &InvVect{
+			Type: uint32(typeUint),
+			Hash: invHash,
+		}
+		invList = append(invList, invVect)
+	}
+
+	return invList, nil
+}
+
+func MsgBitCloutInvFromBytes(data []byte) *MsgBitCloutInv {
+	rr := bytes.NewReader(data)
+	invList, _ := _readInvList(rr)
+	//isSyncResponse := _readBoolByte(rr)
+
+	m := MsgBitCloutInv{
+		InvList: invList,
+	}
 	return &m
 }
