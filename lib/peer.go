@@ -60,9 +60,16 @@ func ReadMessage() interface{} {
 		m = MsgBitCloutVerackFromBytes(payload)
 	} else if inMsgType == 10 {
 		inv := MsgBitCloutInvFromBytes(payload)
+		t := MsgBitCloutGetTransactions{}
 		for _, item := range inv.InvList {
-			fmt.Println(item.Type)
+			if item.Type != 0 {
+				continue
+			}
+			t.HashList = append(t.HashList, &item.Hash)
 		}
+		payload := t.ToBytes()
+		fmt.Println("t.HashList", len(t.HashList))
+		SendPayloadWithType(12, payload)
 	}
 	return m
 }

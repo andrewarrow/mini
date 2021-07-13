@@ -116,3 +116,18 @@ func MsgBitCloutInvFromBytes(data []byte) *MsgBitCloutInv {
 	}
 	return &m
 }
+
+type MsgBitCloutGetTransactions struct {
+	HashList []*BlockHash
+}
+
+func (msg *MsgBitCloutGetTransactions) ToBytes() []byte {
+	data := []byte{}
+
+	data = append(data, UintToBuf(uint64(len(msg.HashList)))...)
+	for _, hash := range msg.HashList {
+		data = append(data, hash[:]...)
+	}
+
+	return data
+}
