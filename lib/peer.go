@@ -28,8 +28,12 @@ func Connect(ip net.IP) {
 		return
 	}
 	SendVersion()
-	nonce := ReadVersion()
-	SendNonce(nonce)
+	m := ReadMessage()
+	cv := m.(*MsgBitCloutVersion)
+	fmt.Println("nonce1", cv.Nonce)
+	SendNonce(cv.Nonce)
+	m = ReadMessage()
+	fmt.Println("nonce2", m)
 
 	/*
 		for {
@@ -42,19 +46,24 @@ func Connect(ip net.IP) {
 		}*/
 }
 
-func ReadVersion() uint64 {
+func ReadMessage() interface{} {
 	inNetworkType, _ := ReadUvarint(conn)
-	fmt.Println(inNetworkType)
 	inMsgType, _ := ReadUvarint(conn)
-	fmt.Println(inMsgType)
+	fmt.Println(inNetworkType, inMsgType)
 	checksum := make([]byte, 8)
 	io.ReadFull(conn, checksum)
 	payloadLength, _ := ReadUvarint(conn)
 	payload := make([]byte, payloadLength)
 	io.ReadFull(conn, payload)
-	m := MsgBitCloutVersionFromBytes(payload)
+
+	var m interface{}
+	if inMsgType == 1 {
+		m = MsgBitCloutVersionFromBytes(payload)
+	} else if inMsgType == 2 {
+		m = MsgBitCloutVerackFromBytes(payload)
+	}
 	fmt.Println(m)
-	return m.Nonce
+	return m
 }
 
 func SendVersion() {

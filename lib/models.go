@@ -65,3 +65,12 @@ func (msg *MsgBitCloutVerack) ToBytes() []byte {
 	retBytes = append(retBytes, UintToBuf(msg.Nonce)...)
 	return retBytes
 }
+
+func MsgBitCloutVerackFromBytes(data []byte) *MsgBitCloutVerack {
+	rr := bytes.NewReader(data)
+	m := MsgBitCloutVerack{}
+
+	nonce, _ := ReadUvarint(rr)
+	m.Nonce = nonce
+	return &m
+}
