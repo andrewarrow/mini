@@ -27,23 +27,19 @@ func Connect(ip net.IP) {
 		fmt.Println(err)
 		return
 	}
-	SendVersion()
+	nonce1 := SendVersion()
+	fmt.Println("nonce1", nonce1)
 	m := ReadMessage()
 	cv := m.(*MsgBitCloutVersion)
-	fmt.Println("nonce1", cv.Nonce)
 	SendNonce(cv.Nonce)
 	m = ReadMessage()
 	fmt.Println("nonce2", m)
 
-	/*
-		for {
-			time.Sleep(time.Second * 1)
-			fmt.Println("Reading...")
-			inNetworkType, _ := ReadUvarint(conn)
-			fmt.Println(inNetworkType)
-			inMsgType, _ := ReadUvarint(conn)
-			fmt.Println(inMsgType)
-		}*/
+	for {
+		time.Sleep(time.Second * 1)
+		fmt.Println("Reading...")
+		ReadMessage()
+	}
 }
 
 func ReadMessage() interface{} {
@@ -66,7 +62,7 @@ func ReadMessage() interface{} {
 	return m
 }
 
-func SendVersion() {
+func SendVersion() uint64 {
 	version := MsgBitCloutVersion{}
 	version.Version = 1
 	version.Services = 1
@@ -77,6 +73,7 @@ func SendVersion() {
 	version.MinFeeRateNanosPerKB = 0
 	payload := version.ToBytes()
 	SendPayloadWithType(1, payload)
+	return version.Nonce
 }
 func SendNonce(n uint64) {
 	m := MsgBitCloutVerack{}
