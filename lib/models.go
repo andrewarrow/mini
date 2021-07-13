@@ -183,7 +183,9 @@ func _readTransaction(rr io.Reader) {
 		ReadUvarint(rr)
 	}
 	txnMetaType, _ := ReadUvarint(rr)
-	fmt.Println("txnMetaType", txnMetaType)
+	if txnMetaType == 5 { // TxnTypeSubmitPost
+		fmt.Println("txnMetaType", txnMetaType)
+	}
 }
 
 func MsgBitCloutTransactionBundleFromBytes(data []byte) *MsgBitCloutTransactionBundle {
