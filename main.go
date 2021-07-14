@@ -4,24 +4,22 @@ import (
 	"fmt"
 	"mini/lib"
 	"net"
+	"time"
 )
 
 func main() {
 	fmt.Println("mini")
-	/*
-		ips := lib.GatherValidIPs()
-		for _, ip := range ips {
-			go lib.Connect(ip.String(), ip)
-		}*/
-	//104.238.183.241
-	//lib.Connect(net.ParseIP("64.98.145.30"))
-	//lib.Connect(net.ParseIP("104.238.183.241"))
 
 	go func() {
 		for mp := range lib.MiniPostChan {
 			fmt.Println(mp.Body)
+			fmt.Println("")
+			fmt.Println(time.Unix(mp.Timestamp, 0))
+			fmt.Println("")
+			fmt.Println("https://bitclout.com/posts/" + mp.PostHashHex)
+			fmt.Println("Poster Public Key", mp.PosterPub58)
 		}
 	}()
 
-	lib.Connect("35.232.92.5", net.ParseIP("35.232.92.5"))
+	lib.Connect("peer1", net.ParseIP("35.232.92.5"))
 }

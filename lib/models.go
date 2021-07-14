@@ -292,7 +292,7 @@ func MsgBitCloutTransactionBundleFromBytes(id string, data []byte) *MsgBitCloutT
 
 	numTransactions, _ := ReadUvarint(rr)
 
-	fmt.Println("numTransactions", numTransactions)
+	//fmt.Println("numTransactions", numTransactions)
 	for ii := uint64(0); ii < numTransactions; ii++ {
 		_readTransaction(id, rr)
 		//m.Transactions = append(m.Transactions, retTransaction)
