@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcutil/base58"
 )
 
 type BlockHash [32]byte
@@ -197,6 +198,12 @@ func _readTransaction(id string, rr io.Reader) {
 	pkLen, _ := ReadUvarint(rr)
 	PublicKey := make([]byte, pkLen)
 	io.ReadFull(rr, PublicKey)
+	PublicKey = append(PublicKey, 201, 254, 143, 107)
+	PublicKey = append([]byte{205, 20, 0}, PublicKey...)
+	pub58 := base58.Encode(PublicKey)
+	if txnMetaType == 5 { // TxnTypeSubmitPost
+		fmt.Println(id, "PublicKey", pub58, len(PublicKey))
+	}
 	extraDataLen, _ := ReadUvarint(rr)
 	if extraDataLen != 0 {
 		ExtraData := make(map[string][]byte, extraDataLen)
