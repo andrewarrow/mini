@@ -191,7 +191,7 @@ func _readTransaction(id string, rr io.Reader) {
 		fmt.Println("txnMetaType", txnMetaType, metaLen)
 		meta := SubmitPostMetadataFromBytes(metaBuf)
 		ts := int64(meta.TimestampNanos / 1000000000)
-		fmt.Println(id, "Ago", time.Now().Unix()-ts)
+		fmt.Println(id, "Timestamp", time.Unix(ts, 0))
 		fmt.Println(id, "body", string(meta.Body))
 	}
 	pkLen, _ := ReadUvarint(rr)
