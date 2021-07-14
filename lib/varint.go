@@ -76,10 +76,10 @@ func ReadUvarint(r io.Reader) (uint64, []byte) {
 	history := []byte{}
 	for i := 0; ; i++ {
 		nn, err := io.ReadFull(r, buf)
-		history = append(history, buf[0])
 		if err != nil || nn != 1 {
 			return x, history
 		}
+		history = append(history, buf[0])
 		b := buf[0]
 		if b < 0x80 {
 			if i > 9 || i == 9 && b > 1 {
