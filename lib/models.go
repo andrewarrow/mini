@@ -2,6 +2,7 @@ package lib
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"fmt"
 	"io"
 	"time"
@@ -169,6 +170,13 @@ type MsgBitCloutTransactionBundle struct {
 	Transactions []*MsgBitCloutTxn
 }
 
+func _checksum(input []byte) (cksum [4]byte) {
+	h := sha256.Sum256(input)
+	h2 := sha256.Sum256(h[:])
+	copy(cksum[:], h2[:4])
+	return
+}
+
 func _readTransaction(id string, rr io.Reader) {
 	//m := MsgBitCloutTxn{}
 	numInputs, _ := ReadUvarint(rr)
@@ -198,8 +206,9 @@ func _readTransaction(id string, rr io.Reader) {
 	pkLen, _ := ReadUvarint(rr)
 	PublicKey := make([]byte, pkLen)
 	io.ReadFull(rr, PublicKey)
-	PublicKey = append(PublicKey, 201, 254, 143, 107)
 	PublicKey = append([]byte{205, 20, 0}, PublicKey...)
+	suffix := _checksum(PublicKey)
+	PublicKey = append(PublicKey, suffix[:]...)
 	pub58 := base58.Encode(PublicKey)
 	if txnMetaType == 5 { // TxnTypeSubmitPost
 		fmt.Println(id, "PublicKey", pub58, len(PublicKey))
