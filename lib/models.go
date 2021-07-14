@@ -253,6 +253,11 @@ func _readTransaction(id string, rr io.Reader) {
 		io.ReadFull(rr, sigBytes) // *
 		history = append(history, sigBytes...)
 	}
+	if txnMetaType == 5 {
+		postHash := Sha256DoubleHash(history)
+		fmt.Println("postHash", base58.Encode(postHash[:]))
+	}
+
 }
 
 func MsgBitCloutTransactionBundleFromBytes(id string, data []byte) *MsgBitCloutTransactionBundle {
