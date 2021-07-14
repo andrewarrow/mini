@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"math/big"
-	"time"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil/base58"
@@ -188,7 +187,17 @@ func _checksum(input []byte) (cksum [4]byte) {
 	return
 }
 
+type MiniPost struct {
+	Timestamp     int64
+	Body          string
+	PosterPub58   string
+	PostHashHex   string
+	PostExtraData map[string][]byte
+	ParentStakeID []byte
+}
+
 func _readTransaction(id string, rr io.Reader) {
+	mp := MiniPost{}
 	history := []byte{}
 	numInputs, h := ReadUvarint(rr) // *
 	history = append(history, h...)
@@ -218,28 +227,32 @@ func _readTransaction(id string, rr io.Reader) {
 	io.ReadFull(rr, metaBuf) // *
 	history = append(history, metaBuf...)
 	if txnMetaType == 5 { // TxnTypeSubmitPost
-		fmt.Println("txnMetaType", txnMetaType, metaLen)
+		//fmt.Println("txnMetaType", txnMetaType, metaLen)
 		meta := SubmitPostMetadataFromBytes(metaBuf)
-		ts := int64(meta.TimestampNanos / 1000000000)
-		fmt.Println(id, "Timestamp", time.Unix(ts, 0))
-		fmt.Println(id, "body", string(meta.Body))
+		mp.Timestamp = int64(meta.TimestampNanos / 1000000000)
+
+		//fmt.Println(id, "Timestamp", time.Unix(mp.Timestamp, 0))
+		mp.Body = string(meta.Body)
+		//fmt.Println(id, "body", mp.Body)
+		mp.ParentStakeID = meta.ParentStakeID
 	}
 	pkLen, h := ReadUvarint(rr) // *
 	history = append(history, h...)
 	PublicKey := make([]byte, pkLen)
 	io.ReadFull(rr, PublicKey) // *
 	history = append(history, PublicKey...)
-	PublicKey = append([]byte{205, 20, 0}, PublicKey...)
-	suffix := _checksum(PublicKey)
-	PublicKey = append(PublicKey, suffix[:]...)
-	pub58 := base58.Encode(PublicKey)
 	if txnMetaType == 5 { // TxnTypeSubmitPost
-		fmt.Println(id, "PublicKey", pub58, len(PublicKey))
+		PublicKey = append([]byte{205, 20, 0}, PublicKey...)
+		suffix := _checksum(PublicKey)
+		PublicKey = append(PublicKey, suffix[:]...)
+		pub58 := base58.Encode(PublicKey)
+		//fmt.Println(id, "PublicKey", pub58, len(PublicKey))
+		mp.PosterPub58 = pub58
 	}
 	extraDataLen, h := ReadUvarint(rr) // *
 	history = append(history, h...)
 	if extraDataLen != 0 {
-		ExtraData := make(map[string][]byte, extraDataLen)
+		mp.PostExtraData = make(map[string][]byte, extraDataLen)
 		for ii := uint64(0); ii < extraDataLen; ii++ {
 			var keyLen uint64
 			keyLen, h = ReadUvarint(rr) // *
@@ -254,7 +267,7 @@ func _readTransaction(id string, rr io.Reader) {
 			value := make([]byte, valueLen)
 			io.ReadFull(rr, value) // *
 			history = append(history, value...)
-			ExtraData[key] = value
+			mp.PostExtraData[key] = value
 		}
 	}
 	sigLen, h := ReadUvarint(rr) // *
@@ -265,10 +278,10 @@ func _readTransaction(id string, rr io.Reader) {
 		history = append(history, sigBytes...)
 	}
 	if txnMetaType == 5 {
-		postHash := Sha256DoubleHash(history)
-		fmt.Println("postHash", postHash.String())
+		mp.PostHashHex = Sha256DoubleHash(history).String()
+		//fmt.Println("postHash", mp.PostHashHex)
+		fmt.Println(mp)
 	}
-
 }
 
 func MsgBitCloutTransactionBundleFromBytes(id string, data []byte) *MsgBitCloutTransactionBundle {
