@@ -12,6 +12,8 @@ import (
 	"github.com/btcsuite/btcutil/base58"
 )
 
+var MiniPostChan = make(chan MiniPost, 1024)
+
 type BlockHash [32]byte
 
 func HashToBigint(hash *BlockHash) *big.Int {
@@ -280,7 +282,7 @@ func _readTransaction(id string, rr io.Reader) {
 	if txnMetaType == 5 {
 		mp.PostHashHex = Sha256DoubleHash(history).String()
 		//fmt.Println("postHash", mp.PostHashHex)
-		fmt.Println(mp)
+		MiniPostChan <- mp
 	}
 }
 
