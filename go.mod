@@ -1,4 +1,4 @@
-module mini
+module github.com/andrewarrow/mini
 
 go 1.16
 

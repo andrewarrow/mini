@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"mini/lib"
 	"net"
 	"time"
+
+	"github.com/andrewarrow/mini/lib"
 )
 
 func main() {
