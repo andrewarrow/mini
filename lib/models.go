@@ -3,8 +3,10 @@ package lib
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
+	"math/big"
 	"time"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -12,6 +14,15 @@ import (
 )
 
 type BlockHash [32]byte
+
+func HashToBigint(hash *BlockHash) *big.Int {
+	val, _ := new(big.Int).SetString(hex.EncodeToString(hash[:]), 16)
+	return val
+}
+
+func (bh *BlockHash) String() string {
+	return fmt.Sprintf("%064x", HashToBigint(bh))
+}
 
 type InvVect struct {
 	Type uint32 // 0 tx
@@ -255,7 +266,7 @@ func _readTransaction(id string, rr io.Reader) {
 	}
 	if txnMetaType == 5 {
 		postHash := Sha256DoubleHash(history)
-		fmt.Println("postHash", base58.Encode(postHash[:]))
+		fmt.Println("postHash", postHash.String())
 	}
 
 }
