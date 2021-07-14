@@ -168,7 +168,7 @@ type MsgBitCloutTransactionBundle struct {
 	Transactions []*MsgBitCloutTxn
 }
 
-func _readTransaction(id int, rr io.Reader) {
+func _readTransaction(id string, rr io.Reader) {
 	//m := MsgBitCloutTxn{}
 	numInputs, _ := ReadUvarint(rr)
 	for ii := uint64(0); ii < numInputs; ii++ {
@@ -196,7 +196,7 @@ func _readTransaction(id int, rr io.Reader) {
 	}
 }
 
-func MsgBitCloutTransactionBundleFromBytes(id int, data []byte) *MsgBitCloutTransactionBundle {
+func MsgBitCloutTransactionBundleFromBytes(id string, data []byte) *MsgBitCloutTransactionBundle {
 	rr := bytes.NewReader(data)
 	m := MsgBitCloutTransactionBundle{}
 

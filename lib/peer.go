@@ -13,11 +13,11 @@ import (
 )
 
 type MiniPeer struct {
-	id   int
+	id   string
 	conn net.Conn
 }
 
-func Connect(id int, ip net.IP) {
+func Connect(id string, ip net.IP) {
 	fmt.Println("connecting to peer", ip)
 	netAddr := net.TCPAddr{
 		IP:   ip,
