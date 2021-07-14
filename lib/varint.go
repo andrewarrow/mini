@@ -69,32 +69,34 @@ func Varint(buf []byte) (int64, int) {
 
 var overflow = errors.New("binary: varint overflows a 64-bit integer")
 
-func ReadUvarint(r io.Reader) (uint64, error) {
+func ReadUvarint(r io.Reader) (uint64, []byte) {
 	var x uint64
 	var s uint
 	buf := []byte{0x00}
+	history := []byte{}
 	for i := 0; ; i++ {
 		nn, err := io.ReadFull(r, buf)
+		history = append(history, buf[0])
 		if err != nil || nn != 1 {
-			return x, err
+			return x, history
 		}
 		b := buf[0]
 		if b < 0x80 {
 			if i > 9 || i == 9 && b > 1 {
-				return x, overflow
+				return x, history
 			}
-			return x | uint64(b)<<s, nil
+			return x | uint64(b)<<s, history
 		}
 		x |= uint64(b&0x7f) << s
 		s += 7
 	}
 }
 
-func ReadVarint(r io.Reader) (int64, error) {
-	ux, err := ReadUvarint(r) // ok to continue in presence of error
+func ReadVarint(r io.Reader) (int64, []byte) {
+	ux, history := ReadUvarint(r) // ok to continue in presence of error
 	x := int64(ux >> 1)
 	if ux&1 != 0 {
 		x = ^x
 	}
-	return x, err
+	return x, history
 }

@@ -178,24 +178,34 @@ func _checksum(input []byte) (cksum [4]byte) {
 }
 
 func _readTransaction(id string, rr io.Reader) {
-	//m := MsgBitCloutTxn{}
-	numInputs, _ := ReadUvarint(rr)
+	history := []byte{}
+	numInputs, h := ReadUvarint(rr) // *
+	history = append(history, h...)
 	for ii := uint64(0); ii < numInputs; ii++ {
 		currentInput := NewBitCloutInput()
-		io.ReadFull(rr, currentInput.TxID[:])
-		ReadUvarint(rr)
+		io.ReadFull(rr, currentInput.TxID[:]) // *
+		history = append(history, currentInput.TxID[:]...)
+		_, h := ReadUvarint(rr) // *
+		history = append(history, h...)
 	}
-	numOutputs, _ := ReadUvarint(rr)
+	numOutputs, h := ReadUvarint(rr) // *
+	history = append(history, h...)
 	for ii := uint64(0); ii < numOutputs; ii++ {
 		currentOutput := &BitCloutOutput{}
 		currentOutput.PublicKey = make([]byte, btcec.PubKeyBytesLenCompressed)
-		io.ReadFull(rr, currentOutput.PublicKey)
-		ReadUvarint(rr)
+		io.ReadFull(rr, currentOutput.PublicKey) // *
+		history = append(history, currentOutput.PublicKey...)
+		_, h := ReadUvarint(rr) // *
+		history = append(history, h...)
 	}
-	txnMetaType, _ := ReadUvarint(rr)
-	metaLen, _ := ReadUvarint(rr)
+	txnMetaType, h := ReadUvarint(rr) // *
+	history = append(history, h...)
+	metaLen, h := ReadUvarint(rr) // *
+	history = append(history, h...)
+
 	metaBuf := make([]byte, metaLen)
-	io.ReadFull(rr, metaBuf)
+	io.ReadFull(rr, metaBuf) // *
+	history = append(history, metaBuf...)
 	if txnMetaType == 5 { // TxnTypeSubmitPost
 		fmt.Println("txnMetaType", txnMetaType, metaLen)
 		meta := SubmitPostMetadataFromBytes(metaBuf)
@@ -203,9 +213,11 @@ func _readTransaction(id string, rr io.Reader) {
 		fmt.Println(id, "Timestamp", time.Unix(ts, 0))
 		fmt.Println(id, "body", string(meta.Body))
 	}
-	pkLen, _ := ReadUvarint(rr)
+	pkLen, h := ReadUvarint(rr) // *
+	history = append(history, h...)
 	PublicKey := make([]byte, pkLen)
-	io.ReadFull(rr, PublicKey)
+	io.ReadFull(rr, PublicKey) // *
+	history = append(history, PublicKey...)
 	PublicKey = append([]byte{205, 20, 0}, PublicKey...)
 	suffix := _checksum(PublicKey)
 	PublicKey = append(PublicKey, suffix[:]...)
@@ -213,26 +225,33 @@ func _readTransaction(id string, rr io.Reader) {
 	if txnMetaType == 5 { // TxnTypeSubmitPost
 		fmt.Println(id, "PublicKey", pub58, len(PublicKey))
 	}
-	extraDataLen, _ := ReadUvarint(rr)
+	extraDataLen, h := ReadUvarint(rr) // *
+	history = append(history, h...)
 	if extraDataLen != 0 {
 		ExtraData := make(map[string][]byte, extraDataLen)
 		for ii := uint64(0); ii < extraDataLen; ii++ {
 			var keyLen uint64
-			keyLen, _ = ReadUvarint(rr)
+			keyLen, h = ReadUvarint(rr) // *
+			history = append(history, h...)
 			keyBytes := make([]byte, keyLen)
-			io.ReadFull(rr, keyBytes)
+			io.ReadFull(rr, keyBytes) // *
+			history = append(history, keyBytes...)
 			key := string(keyBytes)
 			var valueLen uint64
-			valueLen, _ = ReadUvarint(rr)
+			valueLen, h = ReadUvarint(rr) // *
+			history = append(history, h...)
 			value := make([]byte, valueLen)
-			io.ReadFull(rr, value)
+			io.ReadFull(rr, value) // *
+			history = append(history, value...)
 			ExtraData[key] = value
 		}
 	}
-	sigLen, _ := ReadUvarint(rr)
+	sigLen, h := ReadUvarint(rr) // *
+	history = append(history, h...)
 	if sigLen != 0 {
 		sigBytes := make([]byte, sigLen)
-		io.ReadFull(rr, sigBytes)
+		io.ReadFull(rr, sigBytes) // *
+		history = append(history, sigBytes...)
 	}
 }
 
