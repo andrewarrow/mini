@@ -184,15 +184,39 @@ func _readTransaction(id string, rr io.Reader) {
 		ReadUvarint(rr)
 	}
 	txnMetaType, _ := ReadUvarint(rr)
+	metaLen, _ := ReadUvarint(rr)
+	metaBuf := make([]byte, metaLen)
+	io.ReadFull(rr, metaBuf)
 	if txnMetaType == 5 { // TxnTypeSubmitPost
-		metaLen, _ := ReadUvarint(rr)
-		metaBuf := make([]byte, metaLen)
-		io.ReadFull(rr, metaBuf)
 		fmt.Println("txnMetaType", txnMetaType, metaLen)
 		meta := SubmitPostMetadataFromBytes(metaBuf)
 		ts := int64(meta.TimestampNanos / 1000000000)
 		fmt.Println(id, "Ago", time.Now().Unix()-ts)
 		fmt.Println(id, "body", string(meta.Body))
+	}
+	pkLen, _ := ReadUvarint(rr)
+	PublicKey := make([]byte, pkLen)
+	io.ReadFull(rr, PublicKey)
+	extraDataLen, _ := ReadUvarint(rr)
+	if extraDataLen != 0 {
+		ExtraData := make(map[string][]byte, extraDataLen)
+		for ii := uint64(0); ii < extraDataLen; ii++ {
+			var keyLen uint64
+			keyLen, _ = ReadUvarint(rr)
+			keyBytes := make([]byte, keyLen)
+			io.ReadFull(rr, keyBytes)
+			key := string(keyBytes)
+			var valueLen uint64
+			valueLen, _ = ReadUvarint(rr)
+			value := make([]byte, valueLen)
+			io.ReadFull(rr, value)
+			ExtraData[key] = value
+		}
+	}
+	sigLen, _ := ReadUvarint(rr)
+	if sigLen != 0 {
+		sigBytes := make([]byte, sigLen)
+		io.ReadFull(rr, sigBytes)
 	}
 }
 
@@ -202,6 +226,7 @@ func MsgBitCloutTransactionBundleFromBytes(id string, data []byte) *MsgBitCloutT
 
 	numTransactions, _ := ReadUvarint(rr)
 
+	fmt.Println("numTransactions", numTransactions)
 	for ii := uint64(0); ii < numTransactions; ii++ {
 		_readTransaction(id, rr)
 		//m.Transactions = append(m.Transactions, retTransaction)

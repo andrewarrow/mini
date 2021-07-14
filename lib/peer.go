@@ -72,7 +72,7 @@ func (mp *MiniPeer) ReadMessage() interface{} {
 			t.HashList = append(t.HashList, &item.Hash)
 		}
 		payload := t.ToBytes()
-		//fmt.Println("t.HashList", len(t.HashList))
+		fmt.Println(mp.id, "t.HashList", len(t.HashList))
 		mp.SendPayloadWithType(12, payload)
 	} else if inMsgType == 13 {
 		MsgBitCloutTransactionBundleFromBytes(mp.id, payload)
