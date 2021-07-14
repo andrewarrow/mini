@@ -134,3 +134,26 @@ func RandInt64(max int64) int64 {
 	val, _ := rand.Int(rand.Reader, big.NewInt(math.MaxInt64))
 	return val.Int64()
 }
+func TestConnect(id string, ip net.IP) {
+	fmt.Println("connecting to peer", ip)
+	netAddr := net.TCPAddr{
+		IP:   ip,
+		Port: 17000,
+	}
+	fmt.Println(netAddr)
+	var err error
+	mp := MiniPeer{}
+	mp.id = id
+	mp.conn, err = net.DialTimeout(netAddr.Network(), netAddr.String(), 5*time.Second)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	nonce1 := mp.SendVersion()
+	fmt.Println("nonce1", nonce1)
+	m := mp.ReadMessage()
+	cv := m.(*MsgBitCloutVersion)
+	mp.SendNonce(cv.Nonce)
+	m = mp.ReadMessage()
+	fmt.Println("nonce2", m)
+}
