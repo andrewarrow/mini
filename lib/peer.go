@@ -18,32 +18,39 @@ type MiniPeer struct {
 }
 
 func Connect(id string, ip net.IP) {
-	fmt.Println("connecting to peer", ip)
-	netAddr := net.TCPAddr{
-		IP:   ip,
-		Port: 17000,
-	}
-	fmt.Println(netAddr)
-	var err error
-	mp := MiniPeer{}
-	mp.id = id
-	mp.conn, err = net.DialTimeout(netAddr.Network(), netAddr.String(), 30*time.Second)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	nonce1 := mp.SendVersion()
-	fmt.Println("nonce1", nonce1)
-	m := mp.ReadMessage()
-	cv := m.(*MsgBitCloutVersion)
-	mp.SendNonce(cv.Nonce)
-	m = mp.ReadMessage()
-	fmt.Println("nonce2", m)
-	mp.SendMempool()
-
 	for {
-		time.Sleep(time.Second * 1)
-		mp.ReadMessage()
+		fmt.Println("connecting to peer", ip)
+		netAddr := net.TCPAddr{
+			IP:   ip,
+			Port: 17000,
+		}
+		fmt.Println(netAddr)
+		var err error
+		mp := MiniPeer{}
+		mp.id = id
+		mp.conn, err = net.DialTimeout(netAddr.Network(), netAddr.String(), 30*time.Second)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		nonce1 := mp.SendVersion()
+		fmt.Println("nonce1", nonce1)
+		m := mp.ReadMessage()
+		cv := m.(*MsgBitCloutVersion)
+		mp.SendNonce(cv.Nonce)
+		m = mp.ReadMessage()
+		fmt.Println("nonce2", m)
+		mp.SendMempool()
+
+		count := 0
+		for {
+			time.Sleep(time.Second * 1)
+			mp.ReadMessage()
+			count++
+			if count > 60 {
+				break
+			}
+		}
 	}
 }
 
