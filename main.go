@@ -14,6 +14,7 @@ func main() {
 	go func() {
 		for mp := range lib.MiniPostChan {
 			fmt.Println(mp.Body)
+			fmt.Println(mp.ImageURLs)
 			fmt.Println("")
 			fmt.Println(time.Unix(mp.Timestamp, 0))
 			fmt.Println("")

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"math/big"
@@ -192,6 +193,7 @@ func _checksum(input []byte) (cksum [4]byte) {
 type MiniPost struct {
 	Timestamp     int64
 	Body          string
+	ImageURLs     []string
 	PosterPub58   string
 	PostHashHex   string
 	PostExtraData map[string][]byte
@@ -234,7 +236,15 @@ func _readTransaction(id string, rr io.Reader) {
 		mp.Timestamp = int64(meta.TimestampNanos / 1000000000)
 
 		//fmt.Println(id, "Timestamp", time.Unix(mp.Timestamp, 0))
-		mp.Body = string(meta.Body)
+		var bodyMap map[string]interface{}
+		json.Unmarshal(meta.Body, &bodyMap)
+		mp.Body = bodyMap["Body"].(string)
+		mp.ImageURLs = []string{}
+		if bodyMap["ImageURLs"] != nil {
+			for _, url := range bodyMap["ImageURLs"].([]interface{}) {
+				mp.ImageURLs = append(mp.ImageURLs, url.(string))
+			}
+		}
 		//fmt.Println(id, "body", mp.Body)
 		mp.ParentStakeID = meta.ParentStakeID
 	}
