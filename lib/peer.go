@@ -48,6 +48,7 @@ func Connect(id string, ip net.IP) {
 			mp.ReadMessage()
 			count++
 			if count > 60 {
+				mp.conn.Close()
 				break
 			}
 		}
