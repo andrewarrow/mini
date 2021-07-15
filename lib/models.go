@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"math/big"
+	"strings"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil/base58"
@@ -193,6 +194,7 @@ func _checksum(input []byte) (cksum [4]byte) {
 type MiniPost struct {
 	Timestamp     int64
 	Body          string
+	BodyLines     []string
 	ImageURLs     []string
 	PosterPub58   string
 	PostHashHex   string
@@ -239,6 +241,7 @@ func _readTransaction(id string, rr io.Reader) {
 		var bodyMap map[string]interface{}
 		json.Unmarshal(meta.Body, &bodyMap)
 		mp.Body = bodyMap["Body"].(string)
+		mp.BodyLines = strings.Split(mp.Body, "\n")
 		mp.ImageURLs = []string{}
 		if bodyMap["ImageURLs"] != nil {
 			for _, url := range bodyMap["ImageURLs"].([]interface{}) {
